@@ -1349,3 +1349,111 @@ impl PlotItem for PlotImage {
         bounds
     }
 }
+
+/// A set of bars.
+pub struct Bars {
+    pub(super) series: Values,
+    /// Color of the bar. `Color32::TRANSPARENT` means that it will be picked automatically.
+    pub(super) color: Color32,
+    pub(super) width: f32,
+    pub(super) name: String,
+    pub(super) highlight: bool,
+}
+
+impl Bars {
+    pub fn new(series: Values) -> Self {
+        Self {
+            series,
+            color: Color32::TRANSPARENT,
+            width: 0.8,
+            name: Default::default(),
+            highlight: false,
+        }
+    }
+
+    /// Set the bar's color.
+    pub fn color(mut self, color: impl Into<Color32>) -> Self {
+        self.color = color.into();
+        self
+    }
+
+    /// Set the bar's width.
+    pub fn width(mut self, width: impl Into<f32>) -> Self {
+        self.width = width.into();
+        self
+    }
+
+    /// Highlight these points in the plot by scaling up their markers.
+    pub fn highlight(mut self) -> Self {
+        self.highlight = true;
+        self
+    }
+
+    /// Name of this set of bars.
+    ///
+    /// This name will show up in the plot legend, if legends are turned on.
+    ///
+    /// Multiple plot items may share the same name, in which case they will also share an entry in
+    /// the legend.
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn name(mut self, name: impl ToString) -> Self {
+        self.name = name.to_string();
+        self
+    }
+}
+
+impl PlotItem for Bars {
+    fn get_shapes(&self, _ui: &mut Ui, transform: &ScreenTransform, shapes: &mut Vec<Shape>) {
+        let Self {
+            series,
+            color,
+            width,
+            highlight,
+            ..
+        } = self;
+
+        let stroke = Stroke::new(*width, *color);
+
+        if *highlight {
+            // TODO: figure some highlight visuals out
+        }
+
+        series.values.iter().for_each(|point| {
+            shapes.push(Shape::LineSegment {
+                points: [
+                    transform.position_from_value(&Value::new(point.x, 0.0)),
+                    transform.position_from_value(point),
+                ],
+                stroke,
+            });
+        });
+    }
+
+    fn initialize(&mut self, x_range: RangeInclusive<f64>) {
+        self.series.generate_points(x_range);
+    }
+
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+
+    fn color(&self) -> Color32 {
+        self.color
+    }
+
+    fn highlight(&mut self) {
+        self.highlight = true;
+    }
+
+    fn highlighted(&self) -> bool {
+        self.highlight
+    }
+
+    fn values(&self) -> Option<&Values> {
+        Some(&self.series)
+    }
+
+    fn get_bounds(&self) -> Bounds {
+        self.series.get_bounds()
+    }
+}

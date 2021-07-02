@@ -7,7 +7,7 @@ mod transform;
 use std::collections::HashSet;
 
 use items::PlotItem;
-pub use items::{Arrows, Line, MarkerShape, PlotImage, Points, Polygon, Text, Value, Values};
+pub use items::{Arrows, Bars, Line, MarkerShape, PlotImage, Points, Polygon, Text, Value, Values};
 pub use items::{HLine, VLine};
 use legend::LegendWidget;
 pub use legend::{Corner, Legend};
@@ -169,6 +169,20 @@ impl Plot {
             arrows.color = self.auto_color();
         }
         self.items.push(Box::new(arrows));
+        self
+    }
+
+    /// Add bars.
+    pub fn bars(mut self, mut bars: Bars) -> Self {
+        if bars.series.is_empty() {
+            return self;
+        };
+
+        // Give the bars an automatic color if no color has been assigned.
+        if bars.color == Color32::TRANSPARENT {
+            bars.color = self.auto_color();
+        }
+        self.items.push(Box::new(bars));
         self
     }
 
